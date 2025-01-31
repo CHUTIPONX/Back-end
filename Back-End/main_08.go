@@ -4,12 +4,14 @@ import (
 	AdminController "backend/api/controller/admin"
 	AuthController "backend/api/controller/auth"
 	EmployeeController "backend/api/controller/employee"
+	"backend/api/middleware"
+
 	"backend/api/db"
-	"backend/api/middleware" //เรียกใช้ไฟล์ที่อยู่ในห้อง middleware
 	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	//เรียกใช้ไฟล์ที่อยู่ในห้อง middleware
 )
 
 func main() {
@@ -23,26 +25,19 @@ func main() {
 
 	router := gin.Default()
 
-	authorized := router.Group("/api", middleware.JwtAuthen()) //ทำการจัดกลุ่ม path ที่ต้องการล๊อค api
+	authorized := router.Group("/api", middleware.JwtAuthen())
+	authorized.GET("/employeedb", EmployeeController.GetEmployeeDB)
+	authorized.GET("/employee", EmployeeController.GetEmployee)
+	authorized.GET("/employeedb/:id", EmployeeController.GetEmployeedbByID)
+	authorized.POST("/employee", EmployeeController.PostEmployee)
+	authorized.POST("/employeedb", EmployeeController.PostEmployeeDB)
+	authorized.PUT("/employee", EmployeeController.PutEmployee)
+	authorized.PUT("/employeedb", EmployeeController.PutEmployeeDB)
+	authorized.DELETE("/employee", EmployeeController.DeleteEmployee)
+	authorized.DELETE("/employeedb/:id", EmployeeController.DeleteEmployeeDB)
 
-	//Employee API Method
-	router.GET("/employee", EmployeeController.GetEmployee)         //GET
-	router.GET("/employee/:id", EmployeeController.GetEmployeeByID) //GET BY ID
-	authorized.GET("/employeedb", EmployeeController.GetEmployeeDB) //ล๊อค api โดยต้องแนบ token ก่อนถึงใช้งานได้
-	router.GET("/admin", AdminController.GetAdmin)                  //POST TO DB
+	router.POST("/register", AdminController.PostAdmin)
+	router.POST("/login", AuthController.Login)
 
-	router.POST("/employee", EmployeeController.PostEmployee)     //POST TO DB
-	router.POST("/employeedb", EmployeeController.PostEmployeeDB) //POST TO DB
-
-	router.POST("/register", AdminController.PostAdmin) //POST TO DB
-
-	router.PUT("/employee", EmployeeController.PutEmployee)     //PUT
-	router.PUT("/employeedb", EmployeeController.PutEmployeeDB) //PUT DB
-
-	router.DELETE("/employee", EmployeeController.DeleteEmployee)         //DELETE
-	router.DELETE("/employeedb/:id", EmployeeController.DeleteEmployeeDB) //DELETE DB
-
-	//Customer API Method
-	router.POST("/login", AuthController.Login) //POST LOGIN
-	router.Run()                                // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	router.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
