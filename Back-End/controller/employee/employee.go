@@ -9,7 +9,7 @@ import (
 )
 
 type Tbl_employee struct {
-	Emp_id         int `gorm:"primaryKey"`
+	Emp_id         int
 	Emp_firstname  string
 	Emp_lastname   string
 	Emp_department string
@@ -38,10 +38,26 @@ func GetEmployeeDB(c *gin.Context) {
 }
 
 // GET By ID
-func GetEmployeeByID(c *gin.Context) {
-	id := c.Param("id")
+func GetEmployeedbByID(c *gin.Context) {
+	id := c.Param("id") // Get the ID from the URL parameter
+
+	var employee Tbl_employee
+
+	// Search for the employee by ID
+	if err := db.Db.First(&employee, id).Error; err != nil {
+		// If the employee is not found, return an error response
+		c.JSON(http.StatusNotFound, gin.H{
+			"status":  "error",
+			"message": "Employee not found",
+		})
+		return
+	}
+
+	// Return the employee data if found
 	c.JSON(http.StatusOK, gin.H{
-		"message": id,
+		"status":   "ok",
+		"message":  "Employee found",
+		"employee": employee,
 	})
 }
 
@@ -66,7 +82,6 @@ func PostEmployeeDB(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, gin.H{"status": "error", "message": "User Failed", "tbl_fund": tbl_employee})
 	}
-
 }
 
 func PutEmployee(c *gin.Context) {
@@ -91,12 +106,12 @@ func PutEmployeeDB(c *gin.Context) {
 	UpdateEmployees.Emp_department = json.Emp_department
 	UpdateEmployees.Emp_salary = json.Emp_salary
 
-	db.Db.Save(&UpdateEmployees)
+	db.Db.Where("emp_id = ? ", json.Emp_id).Save(&UpdateEmployees)
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "User Updated"})
-
 }
 
+// DeleteEmployee
 func DeleteEmployee(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Employee DELETE Method!",
